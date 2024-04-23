@@ -12,6 +12,29 @@ def random_dataset(src_file,k):
     return df
 
 
+
+
+
+def model(X, W, b):
+    Z = X.dot(W) + b
+    A = 1 / (1 + np.exp(-Z))
+    return A
+def log_loss(A, y):
+    epsilon = 1e-15
+    return 1/len(y) * (np.sum(-y * np.log(A + epsilon) - (1 - y) * np.log(1 - A + epsilon)))
+def gradients(A, X, y):
+    dW = 1 / len(y) * np.dot(X.T, A - y)
+    db = 1 / len(y) * np.sum(A - y)
+    return (dW, db)
+# def update(dW, db, W, b, learning_rate):
+#     W = W - learning_rate * dW
+#     b = b - learning_rate * db
+#     return (W, b)
+# def predict(X, W, b):
+#     A = model(X, W, b)
+#     # print(A)
+#     return A >= 0.5
+
 def preprocess(df):
     src_ipv4_idx = {name: idx for idx, name in enumerate(sorted(df["IPV4_SRC_ADDR"].unique()))}
     dst_ipv4_idx = {name: idx for idx, name in enumerate(sorted(df["IPV4_DST_ADDR"].unique()))}
@@ -31,6 +54,7 @@ def initialisation(X):
     w = np.random.randn(X.shape[1], 1)
     b = np.random.randn(1)
     return (w, b)
+
 def update(dW, db, W, b, learning_rate = 0.01):
     W = W - learning_rate * dW
     b = b - learning_rate * db
@@ -61,5 +85,41 @@ def aggregation_function(parameters):
         for key in aggregated_model.keys():
             aggregated_model[key] /= num_clients
         return aggregated_model
+
+
+def artificial_neuron(W, b, X, y, learning_rate = 0.01, n_iter = 100, batch_size=64):
+    Loss = []
+    m = X.shape[0]
+    for i in range(n_iter):
+        for j in range(0, m, batch_size):
+            # Get mini-batch
+            X_batch = X[j:j+batch_size]
+            y_batch = y[j:j+batch_size]
+
+            # Forward propagation
+            A = model(X_batch, W, b)
+            loss = log_loss(A, y_batch)
+
+            # Backpropagation
+            dW, db = gradients(A, X_batch, y_batch)
+
+            # Update parameters
+            W, b = update(dW, db, W, b, learning_rate)
+
+        # Compute average loss for the epoch
+        epoch_loss = log_loss(model(X, W, b), y)
+        Loss.append(epoch_loss)
+
+        print(f"Iteration {i+1}/{n_iter} - Loss: {epoch_loss}")
+    #print(Loss)
+    # plt.plot(Loss)
+    # plt.show()
+    return (W, b, dW, db)
+
+def generate_random(i, n):
+    random_number = random.random()
+    random_number *= 1/n
+    random_number += i/n
+    return random_number
 if __name__ == "__main__":
    pass 
