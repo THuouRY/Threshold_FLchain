@@ -4,6 +4,8 @@ import pandas as pd
 import heapq
 import random
 import os
+import threshold_crypto as tc
+from threshold_crypto.data import *
 
 
 def random_dataset(src_file,k):
@@ -12,6 +14,13 @@ def random_dataset(src_file,k):
     return df
 
 
+def thresh_keys(t,n):
+    curve_params = tc.CurveParameters()
+    thresh_params = tc.ThresholdParameters(t, n)
+    pub_key, key_shares = tc.create_public_key_and_shares_centralized(curve_params, thresh_params)
+    for i in range(len(key_shares)):
+        key_shares[i] = key_shares[i].to_json()
+    return {'pk':pub_key.to_json(),'sks':key_shares, 'thresh_params':thresh_params.to_json()}
 
 
 
